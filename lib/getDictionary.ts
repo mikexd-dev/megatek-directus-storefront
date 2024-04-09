@@ -1,11 +1,12 @@
 const dictionaries = {
   en: () =>
     import("./../dictinoaries/en.json").then((module) => module.default),
-  // de: () =>
-  //   import("./../dictinoaries/de.json").then((module) => module.default),
+  de: () =>
+    import("./../dictinoaries/de.json").then((module) => module.default),
 };
 
 export const getDictionary = async (locale: string) => {
+  console.log(locale);
   if (!locale || locale === undefined) {
     return dictionaries["en"]();
   } else {

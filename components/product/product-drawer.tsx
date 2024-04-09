@@ -26,7 +26,7 @@ const ProductDrawerPage = ({
               <DrawerTitle>Are you absolutely sure?</DrawerTitle>
               <DrawerDescription>
                 {hasVariants && variant.title}
-                {Object.entries(customisedProduct).map(([key, value]) => (
+                {Object.entries(customisedProduct).map(([key, value]: any) => (
                   <div key={key} className="flex justify-between">
                     <span>{key}:</span>
                     <span>{value}</span>
