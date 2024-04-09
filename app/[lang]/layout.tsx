@@ -2,11 +2,15 @@ import Footer from "@/components/navigation/footer";
 import Navigation from "@/components/navigation/navigation";
 import siteConfig from "@/config/site";
 import { getDictionary } from "@/lib/getDictionary";
-import { Inter } from "next/font/google";
+import { Inter as FontSans } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
+import { cn } from "@/lib/utils";
 
-const inter = Inter({ subsets: ["latin"] });
+const fontSans = FontSans({
+  subsets: ["latin"],
+  variable: "--font-sans",
+});
 
 /* STATIC METADATA */
 /* export const metadata: Metadata = {
@@ -78,7 +82,12 @@ export default function RootLayout({
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
   gtag('config', 'G-11Y5YESB1F');`}</Script>
-      <body className={inter.className}>
+      <body
+        className={cn(
+          "min-h-screen bg-background font-sans antialiased",
+          fontSans.variable
+        )}
+      >
         {/* @ts-expect-error Async Server Component */}
         <Navigation locale={lang} />
         <div className="pt-10 min-h-[calc(100vh-300px)]">{children}</div>

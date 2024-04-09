@@ -7,7 +7,7 @@ const nextConfig = {
         protocol: "https",
       },
       {
-        hostname: "directus-production-8653.up.railway.app",
+        hostname: "megatek-directus-admin-yuj9u.ondigitalocean.app",
         protocol: "https",
       },
     ],

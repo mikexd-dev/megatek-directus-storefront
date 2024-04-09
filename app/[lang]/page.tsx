@@ -17,7 +17,7 @@ export default async function Home({
 
   const getAllPosts = async () => {
     try {
-      const posts = await directus.items("post").readByQuery({
+      const posts = await directus.items("Post").readByQuery({
         fields: [
           "*",
           "author.id",
@@ -73,7 +73,7 @@ export default async function Home({
           posts={posts.filter((_post, index) => index > 0 && index < 3)}
         />
         {/* ---@ts-expect-error Async Server Component */}
-        <CTACard dictionary={dictionary} />
+        {/* <CTACard dictionary={dictionary} /> */}
         <PostCard locale={locale} reverse post={posts[3]} />
         <PostList
           locale={locale}

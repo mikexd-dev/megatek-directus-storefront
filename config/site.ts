@@ -3,25 +3,25 @@ export interface SiteConfig {
   description: string;
   currentlyAt: string;
   socialLinks: {
-    twitter: string;
+    // twitter: string;
     youtube: string;
-    github: string;
-    linkedin: string;
-    instagram: string;
+    // github: string;
+    // linkedin: string;
+    // instagram: string;
   };
 }
 
 const siteConfig: SiteConfig = {
-  siteName: "Explorer",
+  siteName: "Megatek Configurator",
   description:
     "A minimal and lovely travel blog which shares experiences and citiest around the world!",
-  currentlyAt: "Budapest",
+  currentlyAt: "Singapore",
   socialLinks: {
-    twitter: "https://twitter.com/makrdev",
-    youtube: "https://youtube.com/@makrdev",
-    github: "https://github.com/batuhanbilginn",
-    linkedin: "https://linkedin.com/in/batuhanbilgin",
-    instagram: "https://instagram.com/batuhanbilginn",
+    // twitter: "https://twitter.com/makrdev",
+    youtube: "https://www.youtube.com/@megatekenterprises7257",
+    // github: "https://github.com/batuhanbilginn",
+    // linkedin: "https://linkedin.com/in/batuhanbilgin",
+    // instagram: "https://instagram.com/batuhanbilginn",
   },
 };
 

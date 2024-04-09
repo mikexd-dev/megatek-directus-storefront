@@ -1,7 +1,7 @@
 import { Post } from "@/types/collection";
 import Image from "next/image";
 import Link from "next/link";
-import PostContent from "./post-content";
+import SubcategoryContent from "./subcategory-content";
 
 interface PostProps {
   post: Post;
@@ -11,36 +11,37 @@ interface PostProps {
 }
 
 const PostCard = ({
-  post,
+  subcategory,
   layout = "horizontal",
   reverse = false,
   locale,
-}: PostProps) => {
+}: any) => {
   // console.log(post, "post");
   return (
     <>
-      {post ? (
+      {subcategory ? (
         <Link
           className={`@container ${
             layout === "horizontal"
               ? "grid items-center grid-cols-1 md:grid-cols-2 gap-10"
               : "space-y-10"
           } `}
-          href={`/${locale}/post/${post.slug}`}
+          href={`/${locale}/subcategory/${subcategory.slug}`}
         >
           {/* Post Image */}
           <Image
             className={`rounded-md w-full object-cover object-center h-full max-h-[300px] ${
               reverse ? "md:order-last" : ""
             }`}
-            alt={post.title}
-            src={`${process.env.NEXT_PUBLIC_ASSETS_URL}${post.image}?key=optimised`}
+            alt={subcategory.title}
+            src={`${process.env.NEXT_PUBLIC_ASSETS_URL}${subcategory.image}?key=optimised`}
             width={600}
             height={300}
           />
+          <>{subcategory.title}</>
           {/* Post Content */}
           {/* @ts-expect-error Async Server Component */}
-          <PostContent locale={locale} post={post} />
+          {/* <SubcategoryContent locale={locale} subcategory={subcategory} /> */}
         </Link>
       ) : (
         <></>

@@ -5,7 +5,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseURL = process.env.NEXT_PUBLIC_SITE_URL as string;
 
   // Get Posts
-  const posts = await directus.items("post").readByQuery({
+  const posts = await directus.items("Post").readByQuery({
     fields: ["slug", "date_updated"],
   });
 
@@ -27,7 +27,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   });
 
   // Get Categories
-  const categories = await directus.items("category").readByQuery({
+  const categories = await directus.items("Category").readByQuery({
     fields: ["slug", "date_updated"],
   });
 

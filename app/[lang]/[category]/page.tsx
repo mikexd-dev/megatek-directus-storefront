@@ -1,11 +1,65 @@
+import CategoryBody from "@/components/category/category-body";
 import PaddingContainer from "@/components/layout/padding-container";
 import PostList from "@/components/post/post-lists";
+import SubcategoryList from "@/components/subcategory/subcategory-lists";
 import directus from "@/lib/directus";
-import { Post } from "@/types/collection";
+import { Post, Subcategory } from "@/types/collection";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 
 // Get Category Data
+// export const getCategoryData = cache(
+//   async (categorySlug: string, locale: string) => {
+//     try {
+//       const category = await directus.items("Category").readByQuery({
+//         filter: {
+//           slug: {
+//             _eq: categorySlug,
+//           },
+//         },
+//         fields: [
+//           "*",
+//           "translations.*",
+//           "posts.*",
+//           "posts.author.id",
+//           "posts.author.first_name",
+//           "posts.author.last_name",
+//           "posts.category.id",
+//           "posts.category.title",
+//           "posts.translations.*",
+//         ],
+//       });
+
+//       if (locale === "en") {
+//         return category?.data?.[0];
+//       } else {
+//         const fetchedCategory = category?.data?.[0];
+//         const localisedCategory = {
+//           ...fetchedCategory,
+//           title: fetchedCategory.translations[0].title,
+//           description: fetchedCategory.translations[0].description,
+//           posts: fetchedCategory.posts.map((post: any) => {
+//             return {
+//               ...post,
+//               title: post.translations[0].title,
+//               description: post.translations[0].description,
+//               body: post.translations[0].body,
+//               category: {
+//                 ...post.category,
+//                 title: fetchedCategory.translations[0].title,
+//               },
+//             };
+//           }),
+//         };
+//         return localisedCategory;
+//       }
+//     } catch (error) {
+//       console.log(error);
+//       throw new Error("Error fetching category");
+//     }
+//   }
+// );
+
 export const getCategoryData = cache(
   async (categorySlug: string, locale: string) => {
     try {
@@ -17,40 +71,41 @@ export const getCategoryData = cache(
         },
         fields: [
           "*",
-          "translations.*",
-          "posts.*",
-          "posts.author.id",
-          "posts.author.first_name",
-          "posts.author.last_name",
-          "posts.category.id",
-          "posts.category.title",
-          "posts.translations.*",
+          "subcategory.id",
+          "subcategory.status",
+          "subcategory.title",
+          "subcategory.slug",
+          "subcategory.image",
+          "subcategory.products",
         ],
       });
 
-      if (locale === "en") {
-        return category?.data?.[0];
-      } else {
-        const fetchedCategory = category?.data?.[0];
-        const localisedCategory = {
-          ...fetchedCategory,
-          title: fetchedCategory.translations[0].title,
-          description: fetchedCategory.translations[0].description,
-          posts: fetchedCategory.posts.map((post: any) => {
-            return {
-              ...post,
-              title: post.translations[0].title,
-              description: post.translations[0].description,
-              body: post.translations[0].body,
-              category: {
-                ...post.category,
-                title: fetchedCategory.translations[0].title,
-              },
-            };
-          }),
-        };
-        return localisedCategory;
-      }
+      console.log(category?.data?.[0].subcategory, "category");
+
+      // if (locale === "en") {
+      //   return category?.data?.[0];
+      // } else {
+      //   const fetchedCategory = category?.data?.[0];
+      //   const localisedCategory = {
+      //     ...fetchedCategory,
+      //     title: fetchedCategory.translations[0].title,
+      //     description: fetchedCategory.translations[0].description,
+      //     posts: fetchedCategory.posts.map((post: any) => {
+      //       return {
+      //         ...post,
+      //         title: post.translations[0].title,
+      //         description: post.translations[0].description,
+      //         body: post.translations[0].body,
+      //         category: {
+      //           ...post.category,
+      //           title: fetchedCategory.translations[0].title,
+      //         },
+      //       };
+      //     }),
+      //   };
+      //   return localisedCategory;
+      // }
+      return category?.data?.[0];
     } catch (error) {
       console.log(error);
       throw new Error("Error fetching category");
@@ -68,6 +123,7 @@ export const generateMetadata = async ({
   };
 }) => {
   // Get Data from Directus
+  // const categoryData = await getCategoryData(category, lang);
   const categoryData = await getCategoryData(category, lang);
 
   return {
@@ -78,13 +134,13 @@ export const generateMetadata = async ({
       description: categoryData?.description,
       url: `${process.env.NEXT_PUBLIC_SITE_URL}/${lang}/${category}`,
       siteName: categoryData?.title,
-      /* images: [
+      images: [
         {
           url: `${process.env.NEXT_PUBLIC_SITE_URL}/${lang}/${category}/opengraph-image.png`,
           width: 1200,
           height: 628,
         },
-      ], */
+      ],
       locale: lang,
       type: "website",
     },
@@ -92,7 +148,6 @@ export const generateMetadata = async ({
       canonical: `${process.env.NEXT_PUBLIC_SITE_URL}/${category}`,
       languages: {
         "en-US": `${process.env.NEXT_PUBLIC_SITE_URL}/en/${category}`,
-        "de-DE": `${process.env.NEXT_PUBLIC_SITE_URL}/de/${category}`,
       },
     },
   };
@@ -146,14 +201,6 @@ const Page = async ({
     lang: string;
   };
 }) => {
-  // This is for DUMMY
-  /* const category = DUMMY_CATEGORIES.find(
-    (category) => category.slug === params.category
-  );
-  const posts = DUMMY_POSTS.filter(
-    (post) => post.category.title.toLocaleLowerCase() === params.category
-  ); */
-
   const locale = params.lang;
   const categorySlug = params.category;
 
@@ -168,7 +215,7 @@ const Page = async ({
     title: string;
     description: string;
     slug: string;
-    posts: Post[];
+    subcategory: Subcategory[];
   };
 
   return (
@@ -177,11 +224,12 @@ const Page = async ({
         <h1 className="text-4xl font-semibold">
           {typeCorrectedCategory?.title}
         </h1>
-        <p className="text-lg text-neutral-600">
-          {typeCorrectedCategory?.description}
-        </p>
+        <SubcategoryList
+          locale={locale}
+          subcategory={typeCorrectedCategory.subcategory}
+        />
+        <CategoryBody body={typeCorrectedCategory?.description} />
       </div>
-      <PostList locale={locale} posts={typeCorrectedCategory.posts} />
     </PaddingContainer>
   );
 };

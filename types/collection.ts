@@ -18,6 +18,16 @@ export interface Category {
   description?: string;
 }
 
+export interface Subcategory {
+  id: string;
+  title: string;
+  slug: string;
+  description: string;
+  images: string;
+  products: string[];
+  // category: CategoryReference;
+}
+
 export interface Author {
   id: string;
   first_name: string;

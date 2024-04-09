@@ -12,7 +12,7 @@ import { cache } from "react";
 // Get Post Data
 export const getPostData = cache(async (postSlug: string, locale: string) => {
   try {
-    const post = await directus.items("post").readByQuery({
+    const post = await directus.items("Post").readByQuery({
       filter: {
         slug: {
           _eq: postSlug,
@@ -102,7 +102,7 @@ export const generateStaticParams = async () => {
     };
   }); */
   try {
-    const posts = await directus.items("post").readByQuery({
+    const posts = await directus.items("Post").readByQuery({
       filter: {
         status: {
           _eq: "published",
