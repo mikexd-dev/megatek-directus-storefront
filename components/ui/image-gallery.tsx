@@ -27,38 +27,41 @@ const ImageGallery = ({ images }: any) => {
           objectFit: "cover",
         }}
       />
-      <Carousel>
-        <CarouselContent className="ml-2 md:-ml-4">
-          {images.map((image: any, index: number) => {
-            console.log(
-              `${process.env.NEXT_PUBLIC_ASSETS_URL}${image.directus_files_id}?key=optimised`
-            );
-            return (
-              <CarouselItem
-                key={index}
-                className="pl-1 md:basis-1/2 lg:basis-1/3"
-                onClick={() => setSelectedImage(image)}
-              >
-                <Card className="border-none">
-                  <CardContent className="flex aspect-square items-center justify-center p-6">
-                    <Image
-                      src={`${process.env.NEXT_PUBLIC_ASSETS_URL}${image.directus_files_id}?key=optimised`}
-                      priority={index <= 2 ? true : false}
-                      className="rounded-rounded aspect-square"
-                      alt={`Product image ${index + 1}`}
-                      width={300}
-                      height={300}
-                    />
-                  </CardContent>
-                </Card>
-              </CarouselItem>
-              // <CarouselItem className="pl-2 md:pl-4" key={index}>
 
-              // </CarouselItem>
-            );
-          })}
-        </CarouselContent>
-      </Carousel>
+      <div className="hidden sm:block">
+        <Carousel>
+          <CarouselContent className="ml-2 md:-ml-4">
+            {images.map((image: any, index: number) => {
+              console.log(
+                `${process.env.NEXT_PUBLIC_ASSETS_URL}${image.directus_files_id}?key=optimised`
+              );
+              return (
+                <CarouselItem
+                  key={index}
+                  className="pl-1 md:basis-1/2 lg:basis-1/3"
+                  onClick={() => setSelectedImage(image)}
+                >
+                  <Card className="border-none">
+                    <CardContent className="flex aspect-square items-center justify-center p-6">
+                      <Image
+                        src={`${process.env.NEXT_PUBLIC_ASSETS_URL}${image.directus_files_id}?key=optimised`}
+                        priority={index <= 2 ? true : false}
+                        className="rounded-rounded aspect-square"
+                        alt={`Product image ${index + 1}`}
+                        width={300}
+                        height={300}
+                      />
+                    </CardContent>
+                  </Card>
+                </CarouselItem>
+                // <CarouselItem className="pl-2 md:pl-4" key={index}>
+
+                // </CarouselItem>
+              );
+            })}
+          </CarouselContent>
+        </Carousel>
+      </div>
     </div>
   );
 };

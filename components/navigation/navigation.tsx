@@ -6,7 +6,7 @@ import LangSwitcher from "./lang-switcher";
 const Navigation = async ({ locale }: { locale: string }) => {
   const dictionary = await getDictionary(locale);
   return (
-    <div className="sticky top-0 z-[999] left-0 right-0 bg-white bg-opacity-50 border-b backdrop-blur-md">
+    <div className="sticky top-0 left-0 right-0 bg-white bg-opacity-50 border-b backdrop-blur-md">
       <PaddingContainer>
         <div className="flex items-center justify-between py-5">
           <a
@@ -16,7 +16,7 @@ const Navigation = async ({ locale }: { locale: string }) => {
             rel="noopener noreferrer"
           >
             <Image
-              src={`${process.env.NEXT_PUBLIC_ASSETS_URL}/4fcfc410-5d70-4c86-a720-dbb163cdd83d?key=optimised`}
+              src={`${process.env.NEXT_PUBLIC_ASSETS_URL}/4fcfc410-5d70-4c86-a720-dbb163cdd83d`}
               alt="Megatek Logo"
               width={150}
               height={60}

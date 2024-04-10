@@ -40,8 +40,8 @@ export const getProductData = cache(
 
       const productData = product?.data?.[0];
       console.log(productData, "productData");
-      let product_selection;
-      if (productData.selections.length > 0) {
+      let product_selection = null;
+      if (!productData.hasVariant && productData.selections.length > 0) {
         product_selection = await directus
           .items("product_selection")
           .readByQuery({
@@ -50,16 +50,39 @@ export const getProductData = cache(
                 _eq: productData.selections[0].product_id,
               },
             },
-            fields: ["*", "selection_id.*", "selection_id.selction_options.*"],
+            fields: ["*", "selection_id.*", "selection_id.selection_options.*"],
           });
       }
 
-      console.log(product_selection, "product_selection");
-      // const variant = await getVariantData(productData?.variants[0]?.slug);
+      let variant_selection: any = {};
+      if (productData.hasVariant && productData.variants.length > 0) {
+        console.log(productData.variants, "variants mikexd");
+        for (const variant of productData.variants) {
+          const selectionPromises = variant.selections.map(
+            async (selection: any) =>
+              directus.items("variant_selection").readByQuery({
+                filter: {
+                  variant_id: {
+                    _eq: selection.variant_id,
+                  },
+                },
+                fields: [
+                  "*",
+                  "selection_id.*",
+                  "selection_id.selection_options.*",
+                ],
+              })
+          );
+          const selectionResults = await Promise.all(selectionPromises);
+          console.log(selectionResults[0].data, "result");
+          variant_selection[variant.id] = selectionResults[0]?.data;
+        }
+      }
 
-      // console.log(productData.variants[0].selections[0], "product data");
+      console.log(product_selection, "product_selection");
+      console.log(JSON.stringify(variant_selection), "variantSelections");
       if (locale === "en") {
-        return productData;
+        return { productData, product_selection, variant_selection };
       }
     } catch (error) {
       console.log(JSON.stringify(error));
@@ -81,7 +104,9 @@ export const generateMetadata = async ({
 }) => {
   console.log(product, "generatemetadata");
   // Get Post Data from Directus
-  const productData = await getProductData(product, lang);
+  //@ts-ignore
+  const { productData, product_selection, variant_selection } =
+    await getProductData(product, lang);
 
   return {
     title: productData?.title,
@@ -159,7 +184,9 @@ const Page = async ({
   const locale = lang;
   const productSlug = product;
 
-  const productData = await getProductData(productSlug, locale);
+  //@ts-ignore
+  const { productData, product_selection, variant_selection } =
+    await getProductData(productSlug, locale);
 
   /* Structured Data for Google */
   const jsonLd = {
@@ -181,7 +208,7 @@ const Page = async ({
     notFound();
   }
 
-  const dictionary = await getDictionary(locale);
+  // const dictionary = await getDictionary(locale);
 
   return (
     <PaddingContainer>
@@ -192,7 +219,11 @@ const Page = async ({
       />
       {/* Container */}
       <div className="space-y-10">
-        <ProductLayout product={productData} />
+        <ProductLayout
+          product={productData}
+          product_selection={product_selection}
+          variant_selection={variant_selection}
+        />
         {/* CTA Card */}
         {/* ---@ts-expect-error Async Server Component */}
         {/* <CTACard dictionary={dictionary} /> */}
