@@ -76,12 +76,12 @@ export default function RootLayout({
       {/* Google Analytics Script */}
       <Script
         strategy="afterInteractive"
-        src="https://www.googletagmanager.com/gtag/js?id=G-11Y5YESB1F"
+        src="https://www.googletagmanager.com/gtag/js?id=G-24LTYMYDSE"
       ></Script>
       <Script id="google-analytics">{`window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
-  gtag('config', 'G-11Y5YESB1F');`}</Script>
+  gtag('config', 'G-24LTYMYDSE');`}</Script>
       <body
         className={cn(
           "min-h-screen bg-background font-sans antialiased",
