@@ -13,7 +13,6 @@ import { cache } from "react";
 // Get Post Data
 export const getProductData = cache(
   async (productSlug: string, locale: string) => {
-    console.log(productSlug, "productslug");
     try {
       const product = await directus.items("product").readByQuery({
         filter: {
@@ -35,11 +34,11 @@ export const getProductData = cache(
           "selections.description",
           "selections.selection_options",
           "selections.selection_options.*",
+          "selections.selection_options.shouldHide.*",
         ],
       });
 
       const productData = product?.data?.[0];
-      console.log(productData, "productData");
       let product_selection = null;
       if (!productData.hasVariant && productData.selections.length > 0) {
         product_selection = await directus
@@ -50,13 +49,17 @@ export const getProductData = cache(
                 _eq: productData.selections[0].product_id,
               },
             },
-            fields: ["*", "selection_id.*", "selection_id.selection_options.*"],
+            fields: [
+              "*",
+              "selection_id.*",
+              "selection_id.selection_options.*",
+              "selection_id.selection_options.shouldHide.*",
+            ],
           });
       }
 
       let variant_selection: any = {};
       if (productData.hasVariant && productData.variants.length > 0) {
-        console.log(productData.variants, "variants mikexd");
         for (const variant of productData.variants) {
           const selectionPromises = variant.selections.map(
             async (selection: any) =>
@@ -70,17 +73,16 @@ export const getProductData = cache(
                   "*",
                   "selection_id.*",
                   "selection_id.selection_options.*",
+                  "selection_id.selection_options.shouldHide.*",
                 ],
               })
           );
           const selectionResults = await Promise.all(selectionPromises);
-          console.log(selectionResults[0].data, "result");
+
           variant_selection[variant.id] = selectionResults[0]?.data;
         }
       }
 
-      console.log(product_selection, "product_selection");
-      console.log(JSON.stringify(variant_selection), "variantSelections");
       if (locale === "en") {
         return { productData, product_selection, variant_selection };
       }
@@ -102,11 +104,48 @@ export const generateMetadata = async ({
     lang: string;
   };
 }) => {
-  console.log(product, "generatemetadata");
   // Get Post Data from Directus
   //@ts-ignore
   const { productData, product_selection, variant_selection } =
     await getProductData(product, lang);
+
+  let canonicalPath = "";
+  if (product === "9s-series-cleanroom-esd-chair") {
+    canonicalPath = "industrial-seating/9S-Series-Cleanroom-ESD-Chair";
+  } else if (product === "9g-series-cleanroom-esd-chair") {
+    canonicalPath = "industrial-seating/9G-Series-Cleanroom-ESD-Chair";
+  } else if (product === "9p-series-cleanroom-esd-chair") {
+    canonicalPath = "industrial-seating/9P-Series-Cleanroom-ESD-Chair";
+  } else if (product === "5p-series-cleanroom-esd-chair") {
+    canonicalPath = "industrial-seating/5P-Series-Cleanroom-ESD-Chair";
+  } else if (product === "7p-series-cleanroom-esd-chair") {
+    canonicalPath = "industrial-seating/7P-Series-Cleanroom-ESD-Chair";
+  } else if (product === "p8-series-cleanroom-esd-pu-chair") {
+    canonicalPath = "industrial-seating/P8-Series-Cleanroom-ESD-PU-Chair";
+  } else if (product === "pu-moulded-laboratory-chair") {
+    canonicalPath = "industrial-seating/PU-Moulded-Laboratory-Chair";
+  } else if (product === "technical-s1-cleanroom-esd-stool") {
+    canonicalPath = "industrial-seating/technical-s1-cleanroom-esd-stool/";
+  } else if (product === "technical-s2-stainless-steel-stool") {
+    canonicalPath = "industrial-seating/Technical-S2-Stainless-Steel-Stool";
+  } else if (product === "technical-s3-cleanroom-esd-pu-stool") {
+    canonicalPath = "industrial-seating/Technical-S3-Cleanroom-ESD-PU-Stool";
+  } else if (product === "technical-s4-pu-sit-stand-stool") {
+    canonicalPath = "industrial-seating/Technical-S4-PU-Sit-Stand-Stool";
+  } else if (product === "technical-s5-cleanroom-esd-saddle-stool") {
+    canonicalPath =
+      "industrial-seating/Technical-S5-Cleanroom-ESD-Saddle-Stool";
+  } else if (product === "chair-base") {
+    canonicalPath = "Industrial-Seating-components/Chair-base";
+  } else if (product === "chair-gas-lift") {
+    canonicalPath = "Industrial-Seating-components/Chair-Gas-Lift";
+  } else if (product === "chair-foot-ring") {
+    canonicalPath = "Industrial-Seating-components/Chair-Footring";
+  } else if (product === "chair-castors") {
+    canonicalPath = "Industrial-Seating-components/Chair-Castor";
+  } else if (product === "wire-shelving-rack") {
+    canonicalPath = "industrial-wire-shelving-rack";
+  }
 
   return {
     title: productData?.title,
@@ -127,7 +166,7 @@ export const generateMetadata = async ({
       type: "website",
     },
     alternates: {
-      canonical: `${process.env.NEXT_PUBLIC_SITE_URL}/${category}/${subcategory}/${product}`, //TODO:
+      canonical: `https://www.megatek.org/${canonicalPath}`,
       languages: {
         "en-US": `${process.env.NEXT_PUBLIC_SITE_URL}/en/${category}/${subcategory}/${product}`,
       },

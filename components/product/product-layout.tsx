@@ -13,6 +13,7 @@ import {
   ArrowLeft,
   ArrowRight,
   CheckIcon,
+  Info,
 } from "lucide-react";
 import HtmlParser from "../ui/html-parser";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,11 @@ import {
   useWindowWidth,
   useWindowHeight,
 } from "@react-hook/window-size";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "../ui/hover-card";
 
 interface ProductLayoutProps {
   product: any;
@@ -98,10 +104,7 @@ const ProductLayout = ({
       [selectionTitle]: optionTitle,
     }));
 
-    console.log(nextSelectionTitle, "title");
     if (nextSelectionTitle !== "-1") setAccordionItem(nextSelectionTitle);
-
-    console.log(selectedOptions, "selectedOptions");
   };
 
   const handleVariantSelectOption = (
@@ -190,14 +193,8 @@ const ProductLayout = ({
   };
 
   const renderSubVariantTier = () => {
-    console.log(
-      variantSelections,
-      selectedVariantOption,
-      "mala",
-      variantSelections[selectedVariantOption?.id]?.length
-    );
+    // console.log(variantSelections[selectedVariantOption?.id], "variant");
     if (hasVariants && productTier === 1) {
-      console.log("subvariant");
       return (
         // <div>hello</div>
         <Accordion
@@ -300,6 +297,7 @@ const ProductLayout = ({
   };
 
   const renderProductTier = () => {
+    console.log(productSelections.data, "product selections");
     if (!hasVariants && productTier === 1) {
       return (
         <Accordion
@@ -366,31 +364,101 @@ const ProductLayout = ({
                     }}
                   >
                     {selection.selection_id["selection_options"].map(
-                      (option: any, optionIndex: number) =>
-                        option.status === "published" && (
-                          <div
-                            className={`border-[1.7px] rounded-xl p-2 px-4  ${
-                              selectedOptions[
-                                selection?.selection_id?.title
-                              ] === option.title
-                                ? "border-orange-500 text-orange-500 font-semibold"
-                                : "border-gray-500 text-black font-normal"
-                            } hover:border-orange-500 hover:text-orange-500 text-sm w-full`}
-                            key={optionIndex}
-                            onClick={() =>
-                              handleSelectOption(
-                                selection?.selection_id?.title,
-                                option.title,
-                                index + 1 < productSelections.data.length
-                                  ? productSelections.data[index + 1]?.title
-                                  : "-1"
-                              )
-                            }
-                            style={{ cursor: "pointer" }}
-                          >
-                            {option.title}
-                          </div>
-                        )
+                      (option: any, optionIndex: number) => {
+                        const shouldShowOptions = (
+                          shouldHide: any
+                        ): boolean => {
+                          console.log(
+                            "----------" + option.title,
+                            option,
+                            product
+                          );
+                          if (
+                            option?.shouldHideDuetoProducts &&
+                            option?.shouldHideDuetoProducts.length > 0 &&
+                            option?.shouldHideDuetoProducts.includes(product.id)
+                          )
+                            return false;
+                          if (shouldHide.length === 0) return true;
+
+                          // Extract titles from shouldHide objects
+                          const shouldHideTitles = shouldHide.map(
+                            (option: any) => option.title
+                          );
+                          console.log(shouldHideTitles, "should hide titles");
+                          // Extract all selected option values into an array
+                          const selectedOptionValues =
+                            Object.values(selectedOptions);
+                          console.log(
+                            selectedOptionValues,
+                            "selectedOptionValues",
+                            shouldHideTitles.every(
+                              (title: any) =>
+                                !selectedOptionValues.includes(title)
+                            )
+                          );
+                          // Check if none of the titles in shouldHideTitles appear in selectedOptionValues
+                          return shouldHideTitles.every(
+                            (title: any) =>
+                              !selectedOptionValues.includes(title)
+                          );
+                        };
+                        return (
+                          option.status === "published" &&
+                          shouldShowOptions(option.shouldHide) && (
+                            <HoverCard openDelay={200}>
+                              <HoverCardTrigger>
+                                {" "}
+                                <div
+                                  className={`border-[1.7px] rounded-xl p-2 px-4 flex flex-column items-center  ${
+                                    selectedOptions[
+                                      selection?.selection_id?.title
+                                    ] === option.title
+                                      ? "border-orange-500 text-orange-500 font-semibold"
+                                      : "border-gray-500 text-black font-normal"
+                                  } hover:border-orange-500 hover:text-orange-500 text-sm w-full`}
+                                  key={optionIndex}
+                                  onClick={() =>
+                                    handleSelectOption(
+                                      selection?.selection_id?.title,
+                                      option.title,
+                                      index + 1 < productSelections.data.length
+                                        ? productSelections.data[index + 1]
+                                            ?.title
+                                        : "-1"
+                                    )
+                                  }
+                                  style={{ cursor: "pointer" }}
+                                >
+                                  {option.title}
+                                  {option.description && (
+                                    <span className="inline-block ml-2">
+                                      <Info
+                                        className="h-5 w-5 text-gray-400"
+                                        aria-hidden="true"
+                                      />
+                                    </span>
+                                  )}
+                                </div>
+                              </HoverCardTrigger>
+                              {option.description && (
+                                <HoverCardContent
+                                  className="bg-black-500 text-gray backdrop-blur-md"
+                                  style={{
+                                    fontSize: 12,
+                                    background: "#e2e8f0",
+                                    backdropFilter: "blur(4px)",
+                                    opacity: 0.5,
+                                  }}
+                                >
+                                  <HtmlParser body={option.description} />
+                                </HoverCardContent>
+                              )}
+                            </HoverCard>
+                          )
+                        );
+                      }
+                      // should hide logic
                     )}
                   </AccordionContent>
                 </AccordionItem>
@@ -401,14 +469,12 @@ const ProductLayout = ({
     }
   };
 
-  console.log(product, "product");
-  console.log(product?.variants[0], "helo");
   return (
     <div className="space-y-2">
       <h2 className="text-center text-xl sm:text-2xl md:text-3xl font-bold">
         {product.title}
       </h2>
-      <div className="flex flex-col-reverse md:flex-row gap-x-6">
+      <div className="flex flex-col-reverse md:flex-row gap-x-12">
         <div className="flex-1">
           {isXs && (
             <div className="text-center font-semibold py-6 text-gray-500">

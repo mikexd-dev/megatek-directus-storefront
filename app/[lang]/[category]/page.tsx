@@ -80,31 +80,8 @@ export const getCategoryData = cache(
         ],
       });
 
-      console.log(category?.data?.[0].subcategory, "category");
+      // console.log(category?.data?.[0].subcategory, "category");
 
-      // if (locale === "en") {
-      //   return category?.data?.[0];
-      // } else {
-      //   const fetchedCategory = category?.data?.[0];
-      //   const localisedCategory = {
-      //     ...fetchedCategory,
-      //     title: fetchedCategory.translations[0].title,
-      //     description: fetchedCategory.translations[0].description,
-      //     posts: fetchedCategory.posts.map((post: any) => {
-      //       return {
-      //         ...post,
-      //         title: post.translations[0].title,
-      //         description: post.translations[0].description,
-      //         body: post.translations[0].body,
-      //         category: {
-      //           ...post.category,
-      //           title: fetchedCategory.translations[0].title,
-      //         },
-      //       };
-      //     }),
-      //   };
-      //   return localisedCategory;
-      // }
       return category?.data?.[0];
     } catch (error) {
       console.log(error);

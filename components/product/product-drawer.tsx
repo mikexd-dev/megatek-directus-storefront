@@ -75,7 +75,6 @@ const ProductDrawerPage = ({
     }
   };
 
-  console.log(height, `h-[${height - 200}px]`);
   return (
     <>
       {!emailSuccess && (

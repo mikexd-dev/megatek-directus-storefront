@@ -5,32 +5,6 @@ import { FormEvent, useState } from "react";
 
 /* eslint-disable react/no-unescaped-entities */
 const CTACard = ({ dictionary }: { dictionary: any }) => {
-  // Server Actions Approach
-  /* const formAction = async (formData: FormData) => {
-    "use server";
-    try {
-      const email = formData.get("email");
-      await directus.items("subscribers").createOne({
-        email,
-      });
-      revalidateTag("subscribers-count");
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  const subscribersCount = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}items/subscribers?meta=total_count&access_token=${process.env.ADMIN_TOKEN}`,
-    {
-      next: {
-        tags: ["subscribers-count"],
-      },
-    }
-  )
-    .then((res) => res.json())
-    .then((res) => res.meta.total_count)
-    .catch((error) => console.log(error)); */
-
   // Client Component Approach
   const [email, setEmail] = useState("");
   const [isHandling, setIsHandling] = useState(false);

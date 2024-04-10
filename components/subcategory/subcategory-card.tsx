@@ -16,7 +16,6 @@ const PostCard = ({
   reverse = false,
   locale,
 }: any) => {
-  // console.log(post, "post");
   return (
     <>
       {subcategory ? (
@@ -39,9 +38,6 @@ const PostCard = ({
             height={300}
           />
           <>{subcategory.title}</>
-          {/* Post Content */}
-          {/* @ts-expect-error Async Server Component */}
-          {/* <SubcategoryContent locale={locale} subcategory={subcategory} /> */}
         </Link>
       ) : (
         <></>

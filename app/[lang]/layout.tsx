@@ -40,7 +40,7 @@ export const generateMetadata = async ({
       siteName: siteConfig.siteName,
       images: [
         {
-          url: "https://localhost:3000/opengraph-image.png",
+          url: `${process.env.NEXT_PUBLIC_SITE_URL}/opengraph-image.png`,
           width: 1200,
           height: 628,
         },
@@ -49,10 +49,10 @@ export const generateMetadata = async ({
       type: "website",
     },
     alternates: {
-      canonical: `${process.env.NEXT_PUBLIC_SITE_URL}`,
+      canonical: `https://megatek.org`,
       languages: {
         "en-US": `${process.env.NEXT_PUBLIC_SITE_URL}/en`,
-        "de-DE": `${process.env.NEXT_PUBLIC_SITE_URL}/de`,
+        // "de-DE": `${process.env.NEXT_PUBLIC_SITE_URL}/de`,
       },
     },
     /* Verification for Google Search Console */
