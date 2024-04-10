@@ -7,8 +7,9 @@ export async function GET(request: NextRequest) {
   if (!token || token !== process.env.ADMIN_TOKEN)
     return NextResponse.json({ error: "Not authorised" }, { status: 401 });
   // Revalidate All Posts
-  revalidatePath(`/[lang]/post/[slug]`);
+  revalidatePath(`/[lang]/[category]/[subcategory]/[product]`);
   // Revalidate All Categories
+  revalidatePath(`/[lang]/[category]/[subcategory]`);
   revalidatePath(`/[lang]/[category]`);
   // Revalidate All Languages
   revalidatePath(`/[lang]`);
