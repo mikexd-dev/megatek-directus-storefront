@@ -54,6 +54,7 @@ export const getProductData = cache(
               "selection_id.*",
               "selection_id.selection_options.*",
               "selection_id.selection_options.shouldHide.*",
+              "selection_id.selection_options.shouldHideDuetoProducts.*",
             ],
           });
       }

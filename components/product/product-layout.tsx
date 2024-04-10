@@ -376,7 +376,9 @@ const ProductLayout = ({
                           if (
                             option?.shouldHideDuetoProducts &&
                             option?.shouldHideDuetoProducts.length > 0 &&
-                            option?.shouldHideDuetoProducts.includes(product.id)
+                            option?.shouldHideDuetoProducts.some(
+                              (obj: any) => obj.product_id === product.id
+                            )
                           )
                             return false;
                           if (shouldHide.length === 0) return true;
