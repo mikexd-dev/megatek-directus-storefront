@@ -297,7 +297,7 @@ const ProductLayout = ({
   };
 
   const renderProductTier = () => {
-    console.log(productSelections.data, "product selections");
+    console.log(productSelections, "product selections");
     if (!hasVariants && productTier === 1) {
       return (
         <Accordion
