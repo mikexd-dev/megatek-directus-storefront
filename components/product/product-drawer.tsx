@@ -122,6 +122,7 @@ const ProductDrawerPage = ({
                       <Input
                         type="number"
                         min="1"
+                        defaultValue={1}
                         className="bg-black border-gray-500 w-40"
                         placeholder="Quantity"
                         onChange={(e) =>

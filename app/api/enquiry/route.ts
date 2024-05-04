@@ -172,14 +172,14 @@ async function emailMegatek(body: any, rfq_id: any) {
             Email: "megatek.management@gmail.com",
             Name: "Megatek",
           },
-          //   {
-          //     Email: "megatek.org@gmail.com",
-          //     Name: "Megatek",
-          //   },
-          //   {
-          //     Email: "sales@megatek.org",
-          //     Name: "Megatek",
-          //   },
+          {
+            Email: "megatek.org@gmail.com",
+            Name: "Megatek",
+          },
+          {
+            Email: "sales@megatek.org",
+            Name: "Megatek",
+          },
         ],
         Subject: `[${rfq_id}]: ${body.subject}`,
         TextPart: body.message,
