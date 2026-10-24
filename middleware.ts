@@ -6,16 +6,23 @@ import Negotiator from "negotiator";
 import { i18n } from "./i18n.config";
 
 /* GET LOCALE HANDLER */
-function getLocale(request: NextRequest): string | undefined {
+function getLocale(request: NextRequest): string {
   // Negotiator expects plain object so we need to transform headers
   const negotiatorHeaders: Record<string, string> = {};
   request.headers.forEach((value, key) => (negotiatorHeaders[key] = value));
 
-  // Use negotiator and intl-localematcher to get best locale
-  let languages = new Negotiator({ headers: negotiatorHeaders }).languages();
-  // @ts-ignore locales are readonly
-  const locales: string[] = i18n.locales;
-  return matchLocale(languages, locales, i18n.defaultLocale);
+  // Use negotiator and intl-localematcher to get best locale.
+  // Without an Accept-Language header (crawlers, curl) Negotiator returns "*",
+  // which matchLocale rejects as an invalid tag, so drop wildcards first.
+  const languages = new Negotiator({ headers: negotiatorHeaders })
+    .languages()
+    .filter((language) => language !== "*");
+
+  try {
+    return matchLocale(languages, i18n.locales, i18n.defaultLocale);
+  } catch {
+    return i18n.defaultLocale;
+  }
 }
 
 /* MIDDLEWARE */
@@ -32,7 +39,7 @@ export default function middleware(request: NextRequest) {
     const locale = getLocale(request);
 
     return NextResponse.redirect(
-      new URL(`/${locale}/${pathname}`, request.url)
+      new URL(`/${locale}${pathname === "/" ? "" : pathname}`, request.url)
     );
   }
 }
