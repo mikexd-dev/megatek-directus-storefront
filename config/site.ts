@@ -1,5 +1,7 @@
 export interface SiteConfig {
   siteName: string;
+  siteUrl: string;
+  mainSiteUrl: string;
   description: string;
   currentlyAt: string;
   socialLinks: {
@@ -13,6 +15,8 @@ export interface SiteConfig {
 
 const siteConfig: SiteConfig = {
   siteName: "Megatek Configurator",
+  siteUrl: "https://configurator.megatek.org",
+  mainSiteUrl: "https://www.megatek.org",
   description:
     "A minimal and lovely travel blog which shares experiences and citiest around the world!",
   currentlyAt: "Singapore",

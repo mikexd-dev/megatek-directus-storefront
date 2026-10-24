@@ -5,17 +5,29 @@ import { match as matchLocale } from "@formatjs/intl-localematcher";
 import Negotiator from "negotiator";
 import { i18n } from "./i18n.config";
 
+function isValidLanguageTag(tag: string): boolean {
+  try {
+    Intl.getCanonicalLocales(tag);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /* GET LOCALE HANDLER */
-function getLocale(request: NextRequest): string | undefined {
+function getLocale(request: NextRequest): string {
   // Negotiator expects plain object so we need to transform headers
   const negotiatorHeaders: Record<string, string> = {};
   request.headers.forEach((value, key) => (negotiatorHeaders[key] = value));
 
-  // Use negotiator and intl-localematcher to get best locale
-  let languages = new Negotiator({ headers: negotiatorHeaders }).languages();
-  // @ts-ignore locales are readonly
-  const locales: string[] = i18n.locales;
-  return matchLocale(languages, locales, i18n.defaultLocale);
+  // Use negotiator and intl-localematcher to get best locale.
+  // matchLocale throws on any invalid tag, such as the "*" Negotiator returns
+  // when there is no Accept-Language header (crawlers, curl), so drop those first.
+  const languages = new Negotiator({ headers: negotiatorHeaders })
+    .languages()
+    .filter(isValidLanguageTag);
+
+  return matchLocale(languages, i18n.locales, i18n.defaultLocale);
 }
 
 /* MIDDLEWARE */
@@ -32,7 +44,7 @@ export default function middleware(request: NextRequest) {
     const locale = getLocale(request);
 
     return NextResponse.redirect(
-      new URL(`/${locale}/${pathname}`, request.url)
+      new URL(`/${locale}${pathname === "/" ? "" : pathname}`, request.url)
     );
   }
 }

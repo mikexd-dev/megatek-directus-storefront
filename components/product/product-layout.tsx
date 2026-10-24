@@ -39,17 +39,6 @@ interface ProductLayoutProps {
   variant_selection: any;
 }
 
-interface SelectionOption {
-  title: string;
-  status: string;
-}
-
-interface Selection {
-  title: string;
-  status: string;
-  selection_options: SelectionOption[];
-}
-
 type SelectedOptions = Record<string, string>;
 
 const ProductLayout = ({
@@ -92,6 +81,91 @@ const ProductLayout = ({
   );
 
   const [openDrawer, setOpenDrawer] = useState(false);
+  const [showMissingSelections, setShowMissingSelections] = useState(false);
+
+  // An option is hidden for some products, or once a conflicting option is selected
+  const isOptionVisible = (
+    option: any,
+    selected: SelectedOptions = selectedOptions
+  ): boolean => {
+    if (
+      option?.shouldHideDuetoProducts?.some(
+        (obj: any) => obj.product_id === product.id
+      )
+    )
+      return false;
+    if (!option?.shouldHide || option.shouldHide.length === 0) return true;
+
+    const selectedOptionValues = Object.values(selected);
+    return option.shouldHide.every(
+      (hidden: any) => !selectedOptionValues.includes(hidden.title)
+    );
+  };
+
+  // Selections the customer can answer, as { title, accordion item value, options they can pick }
+  const getAvailableSelections = (
+    selected: SelectedOptions,
+    variantId?: string
+  ): { title: string; value: string; options: string[] }[] => {
+    const selections = hasVariants
+      ? (variantSelections?.[variantId as string] ?? []).map(
+          (selection: any) => ({
+            selection: selection?.selection_id,
+            value: selection?.title,
+          })
+        )
+      : (productSelections?.data ?? []).map((selection: any) => ({
+          selection: selection?.selection_id,
+          value: selection?.selection_id?.title,
+        }));
+
+    return selections
+      .filter(({ selection }: any) => selection?.status === "published")
+      .map(({ selection, value }: any) => ({
+        title: selection.title,
+        value,
+        options: (selection.selection_options ?? [])
+          .filter(
+            (option: any) =>
+              option.status === "published" &&
+              (hasVariants || isOptionVisible(option, selected))
+          )
+          .map((option: any) => option.title),
+      }))
+      .filter((selection: any) => selection.options.length > 0);
+  };
+
+  // Drop choices that are no longer offered, e.g. after switching variant or
+  // picking an option that hides an earlier choice
+  const withoutUnavailableOptions = (
+    selected: SelectedOptions,
+    variantId?: string
+  ): SelectedOptions => {
+    const available = getAvailableSelections(selected, variantId);
+    const kept = Object.fromEntries(
+      Object.entries(selected).filter(([title, value]) =>
+        available.some(
+          (selection) =>
+            selection.title === title && selection.options.includes(value)
+        )
+      )
+    );
+    return Object.keys(kept).length === Object.keys(selected).length
+      ? kept
+      : withoutUnavailableOptions(kept, variantId);
+  };
+
+  const missingSelections = getAvailableSelections(
+    selectedOptions,
+    selectedVariantOption?.id
+  ).filter(
+    (selection) => !selectedOptions[selection.title]
+  );
+  const missingSelectionTitles = missingSelections.map(
+    (selection) => selection.title
+  );
+  const isMissing = (selectionTitle: string) =>
+    showMissingSelections && missingSelectionTitles.includes(selectionTitle);
 
   // Handler to update the selected options
   const handleSelectOption = (
@@ -99,10 +173,12 @@ const ProductLayout = ({
     optionTitle: string,
     nextSelectionTitle: string
   ) => {
-    setSelectedOptions((prev) => ({
-      ...prev,
-      [selectionTitle]: optionTitle,
-    }));
+    setSelectedOptions((prev) =>
+      withoutUnavailableOptions(
+        { ...prev, [selectionTitle]: optionTitle },
+        selectedVariantOption?.id
+      )
+    );
 
     if (nextSelectionTitle !== "-1") setAccordionItem(nextSelectionTitle);
   };
@@ -114,12 +190,18 @@ const ProductLayout = ({
   ) => {
     setSelectedVariantOption(option);
     setSelectedDisplayProduct(option);
+    setSelectedOptions((prev) => withoutUnavailableOptions(prev, option.id));
 
     if (nextSelectionTitle !== "-1") setAccordionItem(nextSelectionTitle);
   };
 
   const incrementProductTier = async (variantTitle: string) => {
+    if (!selectedVariantOption?.id) {
+      setShowMissingSelections(true);
+      return;
+    }
     // await getVariantData(variantId, "en-US");
+    setShowMissingSelections(false);
     setAccordionItem(variantTitle);
     setProductTier(1);
   };
@@ -131,16 +213,39 @@ const ProductLayout = ({
   };
 
   const reviewAndRequest = () => {
-    const allSelectionsMade = product.selections.every(
-      (selection: Selection) => selectedOptions[selection.title]
-    );
-
-    if (allSelectionsMade) {
-      console.log("All selections made:", selectedOptions);
+    if (missingSelections.length === 0) {
+      setShowMissingSelections(false);
       setOpenDrawer(true);
     } else {
-      console.log("Not all selections are made.");
+      setShowMissingSelections(true);
+      setAccordionItem(missingSelections[0].value);
     }
+  };
+
+  const renderMissingSelections = () => {
+    if (!showMissingSelections) return null;
+    const missing =
+      hasVariants && productTier === 0
+        ? selectedVariantOption?.id
+          ? []
+          : ["Product variant"]
+        : missingSelectionTitles.map((title) =>
+            title.replace("Select", "").trim()
+          );
+    if (missing.length === 0) return null;
+    return (
+      <div
+        role="alert"
+        className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+      >
+        <p className="font-semibold">Please choose an option for:</p>
+        <ul className="mt-2 list-disc list-inside">
+          {missing.map((title) => (
+            <li key={title}>{title}</li>
+          ))}
+        </ul>
+      </div>
+    );
   };
 
   const renderVariantTier = () => {
@@ -219,6 +324,8 @@ const ProductLayout = ({
                       className={`${
                         selectedOptions[singleVariant.title]
                           ? "text-orange-500"
+                          : isMissing(singleVariant.title)
+                          ? "text-red-600"
                           : ""
                       } no-underline border-none`}
                     >
@@ -319,6 +426,8 @@ const ProductLayout = ({
                     className={`${
                       selectedOptions[selection?.selection_id?.title]
                         ? "text-orange-500"
+                        : isMissing(selection?.selection_id?.title)
+                        ? "text-red-600"
                         : ""
                     } no-underline border-none py-2`}
                   >
@@ -365,50 +474,10 @@ const ProductLayout = ({
                   >
                     {selection.selection_id["selection_options"].map(
                       (option: any, optionIndex: number) => {
-                        const shouldShowOptions = (
-                          shouldHide: any
-                        ): boolean => {
-                          console.log(
-                            "----------" + option.title,
-                            option,
-                            product
-                          );
-                          if (
-                            option?.shouldHideDuetoProducts &&
-                            option?.shouldHideDuetoProducts.length > 0 &&
-                            option?.shouldHideDuetoProducts.some(
-                              (obj: any) => obj.product_id === product.id
-                            )
-                          )
-                            return false;
-                          if (shouldHide.length === 0) return true;
-
-                          // Extract titles from shouldHide objects
-                          const shouldHideTitles = shouldHide.map(
-                            (option: any) => option.title
-                          );
-                          console.log(shouldHideTitles, "should hide titles");
-                          // Extract all selected option values into an array
-                          const selectedOptionValues =
-                            Object.values(selectedOptions);
-                          console.log(
-                            selectedOptionValues,
-                            "selectedOptionValues",
-                            shouldHideTitles.every(
-                              (title: any) =>
-                                !selectedOptionValues.includes(title)
-                            )
-                          );
-                          // Check if none of the titles in shouldHideTitles appear in selectedOptionValues
-                          return shouldHideTitles.every(
-                            (title: any) =>
-                              !selectedOptionValues.includes(title)
-                          );
-                        };
                         return (
                           option.status === "published" &&
-                          shouldShowOptions(option.shouldHide) && (
-                            <HoverCard openDelay={200}>
+                          isOptionVisible(option) && (
+                            <HoverCard key={optionIndex} openDelay={200}>
                               <HoverCardTrigger>
                                 {" "}
                                 <div
@@ -419,7 +488,6 @@ const ProductLayout = ({
                                       ? "border-orange-500 text-orange-500 font-semibold"
                                       : "border-gray-500 text-black font-normal"
                                   } hover:border-orange-500 hover:text-orange-500 text-sm w-full`}
-                                  key={optionIndex}
                                   onClick={() =>
                                     handleSelectOption(
                                       selection?.selection_id?.title,
@@ -478,14 +546,12 @@ const ProductLayout = ({
       </h2>
       <div className="flex flex-col-reverse md:flex-row gap-x-12">
         <div className="flex-1">
-          {isXs && (
-            <div className="text-center font-semibold py-6 text-gray-500">
-              Product Details{" "}
-              <div className="text-center text-gray-500 pt-2">
-                <ArrowDownCircle className="mx-auto" />
-              </div>
+          <div className="sm:hidden text-center font-semibold py-6 text-gray-500">
+            Product Details{" "}
+            <div className="text-center text-gray-500 pt-2">
+              <ArrowDownCircle className="mx-auto" />
             </div>
-          )}
+          </div>
 
           <ImageGallery images={product.images} />
           <div>
@@ -648,6 +714,7 @@ const ProductLayout = ({
               </Button>
             )}
           </div>
+          {renderMissingSelections()}
           <ProductDrawerPage
             openDrawer={openDrawer}
             setOpenDrawer={setOpenDrawer}
