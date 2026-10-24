@@ -5,6 +5,15 @@ import { match as matchLocale } from "@formatjs/intl-localematcher";
 import Negotiator from "negotiator";
 import { i18n } from "./i18n.config";
 
+function isValidLanguageTag(tag: string): boolean {
+  try {
+    Intl.getCanonicalLocales(tag);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /* GET LOCALE HANDLER */
 function getLocale(request: NextRequest): string {
   // Negotiator expects plain object so we need to transform headers
@@ -12,17 +21,13 @@ function getLocale(request: NextRequest): string {
   request.headers.forEach((value, key) => (negotiatorHeaders[key] = value));
 
   // Use negotiator and intl-localematcher to get best locale.
-  // Without an Accept-Language header (crawlers, curl) Negotiator returns "*",
-  // which matchLocale rejects as an invalid tag, so drop wildcards first.
+  // matchLocale throws on any invalid tag, such as the "*" Negotiator returns
+  // when there is no Accept-Language header (crawlers, curl), so drop those first.
   const languages = new Negotiator({ headers: negotiatorHeaders })
     .languages()
-    .filter((language) => language !== "*");
+    .filter(isValidLanguageTag);
 
-  try {
-    return matchLocale(languages, i18n.locales, i18n.defaultLocale);
-  } catch {
-    return i18n.defaultLocale;
-  }
+  return matchLocale(languages, i18n.locales, i18n.defaultLocale);
 }
 
 /* MIDDLEWARE */

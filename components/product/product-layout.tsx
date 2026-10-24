@@ -84,7 +84,10 @@ const ProductLayout = ({
   const [showMissingSelections, setShowMissingSelections] = useState(false);
 
   // An option is hidden for some products, or once a conflicting option is selected
-  const isOptionVisible = (option: any): boolean => {
+  const isOptionVisible = (
+    option: any,
+    selected: SelectedOptions = selectedOptions
+  ): boolean => {
     if (
       option?.shouldHideDuetoProducts?.some(
         (obj: any) => obj.product_id === product.id
@@ -93,45 +96,69 @@ const ProductLayout = ({
       return false;
     if (!option?.shouldHide || option.shouldHide.length === 0) return true;
 
-    const selectedOptionValues = Object.values(selectedOptions);
+    const selectedOptionValues = Object.values(selected);
     return option.shouldHide.every(
       (hidden: any) => !selectedOptionValues.includes(hidden.title)
     );
   };
 
-  // Selections the customer can currently answer, as { title, accordion item value }
-  const getRequiredSelections = (): { title: string; value: string }[] => {
-    if (hasVariants) {
-      if (productTier === 0) return [];
-      return (variantSelections?.[selectedVariantOption?.id] ?? [])
-        .filter(
-          (selection: any) =>
-            selection?.selection_id?.status === "published" &&
-            selection.selection_id.selection_options?.some(
-              (option: any) => option.status === "published"
-            )
+  // Selections the customer can answer, as { title, accordion item value, options they can pick }
+  const getAvailableSelections = (
+    selected: SelectedOptions,
+    variantId?: string
+  ): { title: string; value: string; options: string[] }[] => {
+    const selections = hasVariants
+      ? (variantSelections?.[variantId as string] ?? []).map(
+          (selection: any) => ({
+            selection: selection?.selection_id,
+            value: selection?.title,
+          })
         )
-        .map((selection: any) => ({
-          title: selection.selection_id.title,
-          value: selection.title,
+      : (productSelections?.data ?? []).map((selection: any) => ({
+          selection: selection?.selection_id,
+          value: selection?.selection_id?.title,
         }));
-    }
-    return (productSelections?.data ?? [])
-      .filter(
-        (selection: any) =>
-          selection?.selection_id?.status === "published" &&
-          selection.selection_id.selection_options?.some(
+
+    return selections
+      .filter(({ selection }: any) => selection?.status === "published")
+      .map(({ selection, value }: any) => ({
+        title: selection.title,
+        value,
+        options: (selection.selection_options ?? [])
+          .filter(
             (option: any) =>
-              option.status === "published" && isOptionVisible(option)
+              option.status === "published" &&
+              (hasVariants || isOptionVisible(option, selected))
           )
-      )
-      .map((selection: any) => ({
-        title: selection.selection_id.title,
-        value: selection.selection_id.title,
-      }));
+          .map((option: any) => option.title),
+      }))
+      .filter((selection: any) => selection.options.length > 0);
   };
 
-  const missingSelections = getRequiredSelections().filter(
+  // Drop choices that are no longer offered, e.g. after switching variant or
+  // picking an option that hides an earlier choice
+  const withoutUnavailableOptions = (
+    selected: SelectedOptions,
+    variantId?: string
+  ): SelectedOptions => {
+    const available = getAvailableSelections(selected, variantId);
+    const kept = Object.fromEntries(
+      Object.entries(selected).filter(([title, value]) =>
+        available.some(
+          (selection) =>
+            selection.title === title && selection.options.includes(value)
+        )
+      )
+    );
+    return Object.keys(kept).length === Object.keys(selected).length
+      ? kept
+      : withoutUnavailableOptions(kept, variantId);
+  };
+
+  const missingSelections = getAvailableSelections(
+    selectedOptions,
+    selectedVariantOption?.id
+  ).filter(
     (selection) => !selectedOptions[selection.title]
   );
   const missingSelectionTitles = missingSelections.map(
@@ -146,10 +173,12 @@ const ProductLayout = ({
     optionTitle: string,
     nextSelectionTitle: string
   ) => {
-    setSelectedOptions((prev) => ({
-      ...prev,
-      [selectionTitle]: optionTitle,
-    }));
+    setSelectedOptions((prev) =>
+      withoutUnavailableOptions(
+        { ...prev, [selectionTitle]: optionTitle },
+        selectedVariantOption?.id
+      )
+    );
 
     if (nextSelectionTitle !== "-1") setAccordionItem(nextSelectionTitle);
   };
@@ -161,6 +190,7 @@ const ProductLayout = ({
   ) => {
     setSelectedVariantOption(option);
     setSelectedDisplayProduct(option);
+    setSelectedOptions((prev) => withoutUnavailableOptions(prev, option.id));
 
     if (nextSelectionTitle !== "-1") setAccordionItem(nextSelectionTitle);
   };
